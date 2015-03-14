@@ -303,15 +303,15 @@ void octree::setDustGroupProperties(tree_structure &tree)
   if(tree.n_dust == 0) return;
    //Set the group properties, note that it is not based on the nodes anymore
   //but on self created groups based on particle order setPHGroupData    
-  copyNodeDataToGroupData.set_arg<int>(0,    &tree.n_dust_groups);
-  copyNodeDataToGroupData.set_arg<int>(1,    &tree.n_dust);
-  copyNodeDataToGroupData.set_arg<cl_mem>(2, tree.dust_pos.p());  
-  copyNodeDataToGroupData.set_arg<cl_mem>(3, tree.dust_group_list.p());
-  copyNodeDataToGroupData.set_arg<cl_mem>(4, tree.dust_groupCenterInfo.p());  
-  copyNodeDataToGroupData.set_arg<cl_mem>(5, tree.dust_groupSizeInfo.p());
+  setPHGroupData.set_arg<int>(0,    &tree.n_dust_groups);
+  setPHGroupData.set_arg<int>(1,    &tree.n_dust);
+  setPHGroupData.set_arg<cl_mem>(2, tree.dust_pos.p());  
+  setPHGroupData.set_arg<cl_mem>(3, tree.dust_group_list.p());
+  setPHGroupData.set_arg<cl_mem>(4, tree.dust_groupCenterInfo.p());  
+  setPHGroupData.set_arg<cl_mem>(5, tree.dust_groupSizeInfo.p());
  
-  copyNodeDataToGroupData.setWork(-1, NCRIT, tree.n_dust_groups);    
-  copyNodeDataToGroupData.execute(execStream->s());
+  setPHGroupData.setWork(-1, NCRIT, tree.n_dust_groups);    
+  setPHGroupData.execute(execStream->s());
 
 
   /*
