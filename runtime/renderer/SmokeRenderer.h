@@ -21,6 +21,8 @@
 #include "paramgl.h"
 #include "GpuArray.h"
 
+void DrawXYPlaneGrid(int numlines, double extent, double opacity, double lightness);
+
 class SmokeRenderer
 {
 public:

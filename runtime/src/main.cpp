@@ -811,6 +811,7 @@ int main(int argc, char** argv)
 		ADDUSAGE(" -I  --iend #           N-body end iteration [" << iterEnd << "]");
 		ADDUSAGE(" -e  --eps #            softening (will be squared) [" << eps << "]");
 		ADDUSAGE(" -o  --theta #          opening angle (theta) [" <<theta << "]");
+		ADDUSAGE("     --imgfolder #    folder to save rendered screenshot images to");
 		ADDUSAGE("     --snapname #       snapshot base name (N-body time is appended in 000000 format) [" << snapshotFile << "]");
 		ADDUSAGE("     --snapiter #       snapshot iteration (N-body time) [" << snapshotIter << "]");
 		ADDUSAGE("     --rmdist #         Particle removal distance (-1 to disable) [" << remoDistance << "]");
@@ -863,6 +864,7 @@ int main(int argc, char** argv)
     opt.setOption( "dev" );
     opt.setOption( "renderdev" );
     opt.setOption( "logfile" );
+    opt.setOption("imgfolder");
     opt.setOption( "snapname");
     opt.setOption( "snapiter");
     opt.setOption( "rmdist");
@@ -923,6 +925,7 @@ int main(int argc, char** argv)
     if ((optarg = opt.getValue("iend")))         iterEnd            = atoi  (optarg);
     if ((optarg = opt.getValue("eps")))          eps                = (float) atof  (optarg);
     if ((optarg = opt.getValue("theta")))        theta              = (float) atof  (optarg);
+    if ((optarg = opt.getValue("imgfolder")))  imagesOutputFolderName = string(optarg);
     if ((optarg = opt.getValue("snapname")))     snapshotFile       = string(optarg);
     if ((optarg = opt.getValue("snapiter")))     snapshotIter       = (float) atof  (optarg);
     if ((optarg = opt.getValue("rmdist")))       remoDistance       = (float) atof  (optarg);

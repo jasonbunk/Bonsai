@@ -32,6 +32,13 @@
 
 #include "tr.h"
 
+/*extern*/ string imagesOutputFolderName;
+bool saveAllFramesForVideo = false;
+int numFramesSavedForVideo = 0;
+const int saveFrameEveryXTimesteps = 3;
+int savingFrameCounter = 0;
+void storeImage(); //declaration
+
 float TstartGlow;
 float dTstartGlow;
 
@@ -263,6 +270,55 @@ void drawWireBox(float3 boxMin, float3 boxMax) {
     glVertex3f(boxMin.x, boxMax.y, boxMax.z);
   glEnd();
 #endif
+}
+
+void DrawXYPlaneGrid(int numlines, double extent, double opacity, double lightness)
+{
+return; //do not draw grid
+	glBegin(GL_LINES);
+	glColor4ub(255,0,0,255);
+	glVertex3d(0,0,0.1);
+	glVertex3d(10,0,0.1);
+	glColor4ub(0,255,0,255);
+	glVertex3d(0,0,0.1);
+	glVertex3d(0,10,0.1);
+	glColor4ub(0,0,255,255);
+	glVertex3d(0,0,0);
+	glVertex3d(0,0,10);
+	glEnd();
+	
+	glBegin(GL_LINES);
+	unsigned char lightness_value = static_cast<unsigned char>(255.0 * lightness);
+	unsigned char opacity_value = static_cast<unsigned char>(255.0 * opacity);
+	glColor4ub(lightness_value, lightness_value, lightness_value, opacity_value);
+	
+	if(numlines > 1)
+	{
+		int aa = 0;
+		double writePos = -extent;
+		double WI = (extent * 2.0) / static_cast<double>((numlines - 1));
+		
+		for(; aa < numlines; aa++)
+		{
+			glVertex3d(-extent, writePos, 0.0);
+			glVertex3d(extent, writePos, 0.0);
+			
+			glVertex3d(writePos, -extent, 0.0);
+			glVertex3d(writePos, extent, 0.0);
+			
+			writePos += WI;
+		}
+	}
+	else
+	{
+		glVertex3d(-extent,   0.0,  0.0);
+		glVertex3d( extent,   0.0,  0.0);
+		glVertex3d(0.0,	   -extent, 0.0);
+		glVertex3d(0.0,	    extent, 0.0);
+	}
+
+
+	glEnd();
 }
 
 void beginDeviceCoords(void)
@@ -572,7 +628,7 @@ public:
   void display() {
     double startTime = GetTimer();
     double getBodyDataTime = startTime;
-
+    
     if (m_renderingEnabled)
     {
       //Check if we need to update the number of particles
@@ -720,8 +776,6 @@ public:
       }
       else //rendering disabled just draw stats
         drawStats(fps);
-
-
 
 //        //m_renderer.display(m_displayMode);
 //        m_renderer.render();
@@ -1060,15 +1114,33 @@ public:
         if (modifiers & GLUT_ACTIVE_SHIFT) {
           // save camera
           printf("Saved camera %d\n", cam);
-          m_camera[cam].translate = m_cameraTrans;
-          m_camera[cam].rotate = m_cameraRot;
-          m_camera[cam].fly = m_flyMode;
+          ofstream camanglefile("cam_saved_angle.txt");
+          if(camanglefile.is_open() && camanglefile.good()) {
+             camanglefile<<m_cameraTrans.x<<" "<<m_cameraTrans.y<<" "<<m_cameraTrans.z<<endl;
+             camanglefile<<m_cameraRot.x<<" "<<m_cameraRot.y<<" "<<m_cameraRot.z<<endl;\
+             camanglefile<<m_flyMode<<endl;
+             camanglefile.close();
+          }
+          else {
+             m_camera[cam].translate = m_cameraTrans;
+             m_camera[cam].rotate = m_cameraRot;
+             m_camera[cam].fly = m_flyMode;
+          }
         } else {
           // restore camera
           printf("Restored camera %d\n", cam);
-          m_cameraTrans = m_camera[cam].translate;
-          m_cameraRot = m_camera[cam].rotate;
-          m_flyMode = m_camera[cam].fly;
+          ifstream camanglefile("cam_saved_angle.txt");
+          if(camanglefile.is_open() && camanglefile.good()) {
+             camanglefile>>m_cameraTrans.x>>m_cameraTrans.y>>m_cameraTrans.z;
+             camanglefile>>m_cameraRot.x>>m_cameraRot.y>>m_cameraRot.z;
+             camanglefile>>m_flyMode;
+             camanglefile.close();
+          }
+          else {
+             m_cameraTrans = m_camera[cam].translate;
+             m_cameraRot = m_camera[cam].rotate;
+             m_flyMode = m_camera[cam].fly;
+          }
         }
       }
       break;
@@ -1544,6 +1616,14 @@ void display()
   theDemo->step();
   theDemo->display();
 
+    if(saveAllFramesForVideo) {
+	savingFrameCounter++;
+	if(savingFrameCounter % saveFrameEveryXTimesteps == 0) {
+          storeImage();
+	savingFrameCounter = 0;
+	}
+    }
+
   //glutReportErrors();
   glutSwapBuffers();
 
@@ -1580,9 +1660,13 @@ void display()
 
 void storeImage()
 {
-  #define FILENAME "tileimg.ppm"
-
-
+  //#define FILENAME "tileimg_.ppm"
+  char FILENAME[1024];
+  memset(FILENAME, 0, 1024);
+  sprintf(FILENAME, "%s/tileimg_%05d.ppm", imagesOutputFolderName.c_str(), numFramesSavedForVideo);
+  numFramesSavedForVideo++;
+  printf("FILENAME == \"%s\"\n\n",FILENAME);
+  
   //The trick is to make sure that there are only full sizes tiles to be 
   //rendered, the 512,512,192 gives full sized tiles. But requires many
   //many many renders
@@ -1595,8 +1679,8 @@ void storeImage()
   //int finalSizeW = 1920;
   //int finalSizeH = 1080;
 
-  int finalSizeW = 4096;
-  int finalSizeH = 3072;
+  int finalSizeW = 1920;
+  int finalSizeH =  1080;
   
   
   
@@ -1774,6 +1858,9 @@ void key(unsigned char key, int /*x*/, int /*y*/)
   switch (key) {
   case '0':
     displayFps = !displayFps;
+    break;
+  case 'y':
+    saveAllFramesForVideo = !saveAllFramesForVideo;
     break;
   case 'u':
     storeImage();

@@ -1457,6 +1457,7 @@ void SmokeRenderer::debugVectors()
 
 void SmokeRenderer::drawSkybox(GLuint tex)
 {
+ DrawXYPlaneGrid(101, 50.0, 0.1, 0.01);
     if (!m_cubemapTex)
       return;
 
